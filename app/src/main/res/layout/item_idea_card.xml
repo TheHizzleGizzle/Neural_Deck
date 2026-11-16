@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    android:gravity="top"
+    android:orientation="horizontal">
+
+    <!-- Stepped 90-degree neon pixel circuit connector -->
+    <com.example.wtfff.ui.PixelBranchConnectorView
+        android:id="@+id/branchConnector"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" />
+
+    <!-- Pixel Cartridge Container -->
+    <LinearLayout
+        android:id="@+id/cardContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="@drawable/bg_px_cartridge"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="12dp">
+
+        <!-- Top Metadata Row: Neon Accent Bar + Skill Badge + Select + Star -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/viewAccentPip"
+                android:layout_width="6dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="6dp"
+                android:background="@color/neon_cyan" />
+
+            <TextView
+                android:id="@+id/tvSkillBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_px_chip_idle"
+                android:fontFamily="monospace"
+                android:paddingStart="6dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="6dp"
+                android:paddingBottom="2dp"
+                android:text="SEED"
+                android:textColor="@color/neon_cyan"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <!-- Collapse/Expand Subtree Toggle -->
+            <TextView
+                android:id="@+id/btnCollapseToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_px_chip_idle"
+                android:fontFamily="monospace"
+                android:paddingStart="6dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="6dp"
+                android:paddingBottom="2dp"
+                android:text="[-2]"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Multi-Select Splice Toggle -->
+            <TextView
+                android:id="@+id/btnSelectMashup"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_px_chip_idle"
+                android:fontFamily="monospace"
+                android:gravity="center"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:text="[+SPLICE]"
+                android:textColor="@color/text_secondary"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <!-- Star Button -->
+            <ImageButton
+                android:id="@+id/btnStar"
+                android:layout_width="26dp"
+                android:layout_height="24dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Star Idea"
+                android:padding="3dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_px_star"
+                android:tint="@color/text_muted" />
+        </LinearLayout>
+
+        <!-- Idea Title -->
+        <TextView
+            android:id="@+id/tvCardTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="monospace"
+            android:lineSpacingExtra="2dp"
+            android:text="Acoustic Bio-Rhythm Cockpit"
+            android:textColor="@color/text_holo"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <!-- Idea Summary -->
+        <TextView
+            android:id="@+id/tvCardSummary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:lineSpacingExtra="3dp"
+            android:text="Generates adaptive pixel-synth soundscapes keyed to typing cadence."
+            android:textColor="@color/text_holo"
+            android:textSize="13sp" />
+
+        <!-- Strategic Rationale -->
+        <TextView
+            android:id="@+id/tvCardRationale"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="#1200F0FF"
+            android:fontFamily="sans-serif"
+            android:paddingStart="8dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="5dp"
+            android:text="// WHY: Replaces punitive streak counters with immediate feedback."
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
+        <!-- Tags Strip -->
+        <TextView
+            android:id="@+id/tvCardTags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:fontFamily="monospace"
+            android:text="#AUDIO  #FLOW_STATE"
+            android:textColor="@color/text_muted"
+            android:textSize="10sp" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/cyber_border_dim" />
+
+        <!-- Cartridge Action Bar: Branch Active Skill | Pick Skill | Copy | Banish to Graveyard -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Quick Branch with Active Skill -->
+            <LinearLayout
+                android:id="@+id/btnBranchQuick"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_px_chip_active"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp">
+
+                <ImageView
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginEnd="4dp"
+                    android:src="@drawable/ic_px_branch"
+                    android:tint="@color/neon_cyan" />
+
+                <TextView
+                    android:id="@+id/tvBranchQuickLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="BRANCH"
+                    android:textColor="@color/neon_cyan"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Choose Specific Skill Cartridge -->
+            <TextView
+                android:id="@+id/btnBranchPickSkill"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_px_chip_idle"
+                android:fontFamily="monospace"
+                android:gravity="center"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="[SKILLS ▾]"
+                android:textColor="@color/neon_magenta"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Copy Node -->
+            <TextView
+                android:id="@+id/btnCopyCard"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_px_chip_idle"
+                android:fontFamily="monospace"
+                android:gravity="center"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
+                android:text="COPY"
+                android:textColor="@color/text_secondary"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <!-- Banish to Anti-Pattern Graveyard -->
+            <LinearLayout
+                android:id="@+id/btnBanishCard"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_px_grave_badge"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp">
+
+                <ImageView
+                    android:layout_width="11dp"
+                    android:layout_height="11dp"
+                    android:layout_marginEnd="4dp"
+                    android:src="@drawable/ic_px_skull"
+                    android:tint="@color/neon_crimson" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="BANISH"
+                    android:textColor="@color/neon_crimson"
+                    android:textSize="9sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Neon Cyber-Deck Dark Pixel Palette -->
+    <color name="cyber_void">#FF080A12</color>
+    <color name="cyber_recessed">#FF05070D</color>
+    <color name="cyber_panel">#FF0F1424</color>
+    <color name="cyber_cartridge">#FF151D33</color>
+    <color name="cyber_cartridge_selected">#FF1C2847</color>
+    <color name="cyber_border_dim">#FF273659</color>
+    <color name="cyber_border_bright">#FF3B5284</color>
+    <color name="cyber_shadow">#FF030408</color>
+
+    <!-- Neon Accents -->
+    <color name="neon_cyan">#FF00F0FF</color>
+    <color name="neon_cyan_dim">#3300F0FF</color>
+    <color name="neon_magenta">#FFFF2E93</color>
+    <color name="neon_magenta_dim">#33FF2E93</color>
+    <color name="neon_lime">#FF39FF88</color>
+    <color name="neon_lime_dim">#3339FF88</color>
+    <color name="neon_amber">#FFFFB800</color>
+    <color name="neon_amber_dim">#33FFB800</color>
+    <color name="neon_crimson">#FFFF3864</color>
+    <color name="neon_crimson_dim">#33FF3864</color>
+    <color name="neon_violet">#FFA855F7</color>
+
+    <!-- Text Hierarchy -->
+    <color name="text_holo">#FFECF6FF</color>
+    <color name="text_secondary">#FF8DA4C7</color>
+    <color name="text_muted">#FF516587</color>
+    <color name="text_on_neon">#FF050811</color>
+
+    <!-- Legacy / Launcher -->
+    <color name="primary">#FF00F0FF</color>
+    <color name="on_primary">#FF050811</color>
+    <color name="ic_launcher_background">#FF080A12</color>
+</resources>

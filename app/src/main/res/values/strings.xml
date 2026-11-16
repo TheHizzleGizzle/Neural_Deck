@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NEURAL//DECK</string>
+    <string name="hud_subtitle">AI_BRAINSTORM_OS // BYOK</string>
+    <string name="seed_hint">Enter raw idea, problem, or weird "what-if" seed...</string>
+    <string name="btn_optimize">OPTIMIZE</string>
+    <string name="btn_spark">SPARK</string>
+    <string name="empty_deck_title">[ DECK_EMPTY // AWAITING_SEED ]</string>
+    <string name="empty_deck_sub">Type a rough concept below, hit [OPTIMIZE] to sharpen it, or [SPARK] to spawn branching idea cartridges.</string>
+</resources>

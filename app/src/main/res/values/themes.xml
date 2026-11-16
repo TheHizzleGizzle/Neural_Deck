@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.App" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/neon_cyan</item>
+        <item name="colorOnPrimary">@color/text_on_neon</item>
+        <item name="colorSecondary">@color/neon_magenta</item>
+        <item name="colorOnSecondary">@color/text_holo</item>
+        <item name="colorSurface">@color/cyber_panel</item>
+        <item name="colorOnSurface">@color/text_holo</item>
+        <item name="android:windowBackground">@color/cyber_void</item>
+        <item name="android:statusBarColor">@color/cyber_recessed</item>
+        <item name="android:navigationBarColor">@color/cyber_recessed</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.NeuralDeck.BottomSheet</item>
+    </style>
+
+    <style name="ThemeOverlay.NeuralDeck.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:navigationBarColor">@color/cyber_panel</item>
+        <item name="bottomSheetStyle">@style/Widget.NeuralDeck.BottomSheet</item>
+    </style>
+
+    <style name="Widget.NeuralDeck.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.NeuralDeck.PixelZero</item>
+    </style>
+
+    <style name="ShapeAppearance.NeuralDeck.PixelZero" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">0dp</item>
+    </style>
+
+    <style name="PixelHudLabel">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+</resources>
