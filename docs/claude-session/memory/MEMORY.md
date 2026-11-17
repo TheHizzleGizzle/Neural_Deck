@@ -1,0 +1,4 @@
+- [Art style fidelity](art-style-fidelity.md) — keep the app's look identical; preview any style change or new theme before making it
+- [Visual learner, delegates decisions](visual-learner-delegates-decisions.md) — show results visually; decide and proceed rather than ask
+- [Deepening work and Antigravity move](deepening-work-in-progress.md) — approved plan; 2026-11-17 migration kit in the repo (AGENTS.md, docs/HANDOFF.md) is now the source of truth
+- [Build environment](build-environment.md) — JDK/SDK paths and tool versions confirmed to build and test the app

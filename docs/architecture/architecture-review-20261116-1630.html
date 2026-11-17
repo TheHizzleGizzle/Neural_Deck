@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neural Deck review</title>
+<script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
+<script>
+  /* fonts load after the page, so a slow font host never blocks rendering */
+  window.addEventListener("load", function () {
+    var l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Silkscreen&display=swap";
+    document.head.appendChild(l);
+  });
+</script>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config = { corePlugins: { preflight: false } };</script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: false, theme: "base", securityLevel: "loose",
+    sequence: { mirrorActors: false, actorMargin: 36, messageFontSize: 12, noteFontSize: 12, wrap: true, useMaxWidth: true },
+    themeVariables: {
+      darkMode: true, background: "#0b1020", fontFamily: "JetBrains Mono, ui-monospace, monospace", fontSize: "12px",
+      primaryColor: "#121a33", primaryTextColor: "#e6f1ff", primaryBorderColor: "#00f0ff",
+      secondaryColor: "#1a2342", tertiaryColor: "#0f1630", lineColor: "#8da4c7", textColor: "#e6f1ff",
+      actorBkg: "#121a33", actorBorder: "#00f0ff", actorTextColor: "#e6f1ff", actorLineColor: "#3b5284",
+      signalColor: "#8da4c7", signalTextColor: "#e6f1ff",
+      labelBoxBkgColor: "#121a33", labelBoxBorderColor: "#00f0ff", labelTextColor: "#e6f1ff", loopTextColor: "#e6f1ff",
+      noteBkgColor: "#2a0f1c", noteTextColor: "#ffd6e2", noteBorderColor: "#ff3864",
+      activationBkgColor: "#1a2342", activationBorderColor: "#00f0ff", sequenceNumberColor: "#0b1020"
+    }
+  });
+  try {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    await mermaid.run({ querySelector: ".mermaid" });
+  } catch (e) {
+    document.querySelectorAll(".mermaid").forEach(el => el.classList.add("failed"));
+  }
+</script>
+<style>
+  :root{
+    --ink: var(--foreground, #17181c);
+    --ink2: var(--muted-foreground, #5d6270);
+    --surface: var(--card, #ffffff);
+    --line: var(--border, #e3dfd5);
+    --soft: var(--muted, #efece4);
+    --accent: var(--primary, #0f766e);
+    --bad: var(--destructive, #c8243f);
+    --warn: var(--warning, #b45309);
+    --good: var(--success, #15803d);
+    --rad: var(--radius, 12px);
+    --sans: var(--font-sans, Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+    --mono: var(--font-mono, "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+    --pix: "Silkscreen", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    /* schematic panels use the app's own palette, fixed in both themes */
+    --s-bg:#0b1020; --s-box:#121a33; --s-box2:#1a2342; --s-line:#3b5284; --s-ink:#e6f1ff; --s-dim:#8da4c7; --s-faint:#516587;
+    --cy:#00f0ff; --mg:#ff2e93; --gr:#39ff88; --am:#ffb800; --rd:#ff3864; --vi:#a855f7;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink: var(--foreground, #e9eaee); --ink2: var(--muted-foreground, #9aa0ad); --surface: var(--card, #161921);
+      --line: var(--border, #2a2e39); --soft: var(--muted, #1e2129); --accent: var(--primary, #2dd4bf);
+      --bad: var(--destructive, #fb7185); --warn: var(--warning, #f59e0b); --good: var(--success, #4ade80);
+    }
+  }
+  *,*::before,*::after{box-sizing:border-box;border:0 solid var(--line)}
+  body{margin:0;font-family:var(--sans);color:var(--ink);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
+  html:not(.embedded) body{background:var(--background,#f6f4ee)}
+  @media (prefers-color-scheme: dark){ html:not(.embedded) body{background:var(--background,#0e1015)} }
+  h1,h2,h3,h4,p,ol,ul,dl,dd,figure{margin:0}
+  ol,ul{padding:0}
+  a{color:inherit}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 24px 72px}
+  html.embedded .wrap{padding:4px 0 24px;max-width:none}
+  html.embedded .page-title{display:none}
+
+  .kicker{font-family:var(--pix);font-size:11px;letter-spacing:.06em;color:var(--ink2)}
+  .page-title{font-family:var(--pix);font-size:42px;line-height:1.05;margin-top:8px;letter-spacing:.01em}
+  .lede{color:var(--ink2);margin-top:10px;max-width:64ch}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;margin-top:20px}
+  .stat{border:1px solid var(--line);border-radius:var(--rad);padding:12px 14px;background:var(--surface)}
+  .stat b{display:block;font-size:26px;line-height:1.1;font-weight:750;letter-spacing:-.02em}
+  .stat span{font-size:12px;color:var(--ink2)}
+  .stat.hot b{color:var(--bad)}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;font-size:12px;color:var(--ink2);align-items:center}
+  .lg{display:inline-flex;align-items:center;gap:6px}
+  .sw{display:inline-block;width:22px;height:14px;border-radius:3px}
+
+  section{margin-top:60px}
+  .sec-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:20px}
+  .sec-num{font-family:var(--pix);font-size:13px;color:var(--accent)}
+  .sec-head h2{font-size:22px;font-weight:750;letter-spacing:-.015em}
+  .sec-head p{color:var(--ink2);font-size:13px;flex-basis:100%}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:20px}
+  .muted{color:var(--ink2)}
+  code,.code{font-family:var(--mono);font-size:.86em;background:var(--soft);padding:1px 5px;border-radius:5px;white-space:nowrap}
+  .refs{font-family:var(--mono);font-size:11.5px;color:var(--ink2);margin-top:12px;line-height:1.7}
+  .refs b{font-family:var(--pix);font-weight:400;font-size:10px;letter-spacing:.06em;margin-right:6px}
+
+  /* badges */
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid;white-space:nowrap}
+  .b-strong{color:var(--good);border-color:color-mix(in srgb,var(--good) 45%,transparent);background:color-mix(in srgb,var(--good) 12%,transparent)}
+  .b-worth{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent);background:color-mix(in srgb,var(--warn) 12%,transparent)}
+  .b-spec{color:var(--ink2);border-color:var(--line);background:var(--soft)}
+  .b-dep{color:var(--ink2);border-color:var(--line);font-family:var(--mono);text-transform:none;letter-spacing:0;font-weight:500}
+  .b-bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,transparent);background:color-mix(in srgb,var(--bad) 10%,transparent)}
+  .b-new{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+
+  /* mass table */
+  .mass{display:grid;grid-template-columns:minmax(0,250px) minmax(0,1fr) 40px;gap:3px 12px;align-items:center;font-size:12px}
+  .mass .f{font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mass .f i{font-style:normal;color:var(--ink2)}
+  .mass .bar{height:12px;border-radius:0 4px 4px 0;background:color-mix(in srgb,var(--ink2) 45%,transparent)}
+  .mass .bar.hot{background:var(--bad)}
+  .mass .bar.ghost{background:transparent;border:1.5px dashed var(--ink2);border-left:0;width:18%;opacity:.7}
+  .mass .n{font-family:var(--mono);text-align:right;color:var(--ink2)}
+  .mass .row-gap{grid-column:1/-1;height:8px}
+  .callout{border-left:3px solid var(--bad);padding:6px 0 6px 14px;font-size:14px}
+
+  /* gap tiles */
+  .gap{border:1.5px dashed var(--line);border-radius:var(--rad);padding:14px 16px}
+  .gap h4{font-size:15px;font-weight:700;margin-top:8px}
+  .gap p{font-size:13px;color:var(--ink2);margin-top:4px}
+  .tag{font-family:var(--pix);font-size:9.5px;letter-spacing:.06em;padding:2px 6px;border-radius:4px;background:var(--soft);color:var(--ink2)}
+  .tag.new{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+
+  /* schematic */
+  .schem{background-color:var(--s-bg);color:var(--s-ink);border-radius:var(--rad);padding:16px;border:1px solid #1e2a4a;
+    background-image:linear-gradient(rgba(59,82,132,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(59,82,132,.14) 1px,transparent 1px);
+    background-size:16px 16px;font-family:var(--mono);font-size:11px;position:relative;overflow:hidden}
+  .cap{font-family:var(--pix);font-size:10px;letter-spacing:.06em;color:var(--s-dim);margin-bottom:12px;display:flex;justify-content:space-between;gap:8px}
+  .cap .before{color:var(--rd)} .cap .after{color:var(--gr)}
+  .mod{background:var(--s-box);border:1px solid var(--s-line);border-radius:4px;padding:7px 9px;position:relative;z-index:1;overflow-wrap:anywhere}
+  .mod .t{font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--s-ink)}
+  .mod .s{color:var(--s-dim);font-size:10.5px;margin-top:2px;line-height:1.35}
+  .mod.deep{border:3px solid var(--gr);box-shadow:4px 4px 0 rgba(57,255,136,.16);padding:10px 12px}
+  .mod.bloat{border:2px solid var(--rd)}
+  .mod.ghost{background:transparent;border:1px dashed var(--s-faint)}
+  .mod.dim{opacity:.8}
+  .s.leak,.leak{color:var(--rd)!important}
+  .chipx{display:inline-block;font-size:10px;padding:3px 7px;border:1px solid var(--s-line);border-radius:3px;color:var(--s-dim);background:rgba(18,26,51,.85)}
+  .faded .chipx{opacity:.72}
+  .iface{margin-top:6px;border:1px solid var(--cy);color:var(--cy);border-radius:3px;padding:3px 8px;font-size:10.5px;display:inline-block}
+  .seam{border-top:2px dashed var(--cy);position:relative;margin:20px 0 14px}
+  .seam span{position:absolute;top:-9px;left:10px;background:var(--s-bg);padding:0 6px;font-family:var(--pix);font-size:9px;letter-spacing:.06em;color:var(--cy)}
+  .down{color:var(--s-dim);text-align:center;font-size:10.5px;line-height:1.25;padding:5px 0}
+  .band{border-left:4px solid var(--c);background:rgba(26,35,66,.75);padding:5px 8px;margin-top:5px;font-size:10.5px;color:var(--s-dim)}
+  .band b{color:var(--s-ink);margin-right:6px}
+  .hub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 12px;position:relative}
+  .hub-lines{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+  .hub-lines line{stroke:var(--s-line);stroke-width:2;vector-effect:non-scaling-stroke}
+  .hub-lines line.r{stroke:var(--rd);stroke-dasharray:5 4}
+  .flow{display:flex;flex-direction:column;gap:0}
+  .step{background:var(--s-box);border:1px solid var(--s-line);border-radius:4px;padding:6px 9px;font-size:10.5px;color:var(--s-ink)}
+  .step.bad{border-color:var(--rd);color:#ffd6e2;background:#2a0f1c}
+  .step.good{border-color:var(--gr);background:#0f2a1d;color:#d6ffe6}
+  .step.ghost{background:transparent;border-style:dashed;color:var(--s-dim)}
+  .svgbox svg{display:block;width:100%;height:auto}
+  .svglegend{font-size:10px;color:var(--s-dim);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap}
+
+  /* mermaid */
+  .mermaid{visibility:hidden;text-align:center;margin:0}
+  .mermaid[data-processed="true"]{visibility:visible}
+  .mermaid.failed{visibility:visible;text-align:left;white-space:pre-wrap;color:var(--s-dim)}
+
+  /* problem + candidate cards */
+  .prob,.cand{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:20px}
+  .prob + .prob,.cand + .cand{margin-top:22px}
+  .head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+  .num{font-family:var(--pix);font-size:12px;color:var(--ink2);order:0}
+  .head .badges{order:1}
+  .head h3{font-size:18.5px;font-weight:750;letter-spacing:-.01em;line-height:1.3;flex:1 1 100%;order:2}
+  .badges{display:flex;gap:6px;flex-wrap:wrap}
+  .files{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .files span{font-family:var(--mono);font-size:11.5px;color:var(--ink2);background:var(--soft);padding:2px 7px;border-radius:5px}
+  .bullets{list-style:none;margin-top:12px;display:grid;gap:7px;font-size:14px}
+  .bullets li{padding-left:18px;position:relative}
+  .bullets li::before{content:"";position:absolute;left:3px;top:.6em;width:6px;height:6px;background:var(--ink2);border-radius:1px}
+  .bullets.bad li::before{background:var(--bad)}
+  .psw{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px 14px;font-size:14px;margin-top:16px}
+  .psw dt{font-family:var(--pix);font-size:10px;letter-spacing:.06em;color:var(--ink2);padding-top:4px}
+  .wins{display:flex;flex-wrap:wrap;gap:6px}
+  .win{font-size:12.5px;padding:3px 10px;border-radius:999px;background:var(--soft);border:1px solid var(--line)}
+  .unlock{display:inline-block;font-family:var(--mono);font-size:11.5px;padding:2px 8px;border-radius:5px;border:1px solid var(--line);text-decoration:none;margin:0 4px 4px 0}
+  .unlock.fix{border-color:color-mix(in srgb,var(--bad) 40%,transparent);color:var(--bad)}
+  .unlock.add{border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
+  .deletion{margin-top:14px;font-size:13px;color:var(--ink2);border-top:1px dashed var(--line);padding-top:10px}
+
+  /* matrix */
+  .tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+  .tbl th{font-family:var(--pix);font-weight:400;font-size:9.5px;letter-spacing:.06em;color:var(--ink2);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+  .tbl td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  .tbl tr:last-child td{border-bottom:0}
+  .tbl td.m{font-family:var(--mono);font-size:11.5px;color:var(--ink2)}
+  .yes,.no,.part{display:inline-block;min-width:26px;text-align:center;font-weight:800;border-radius:5px;padding:1px 6px;font-size:12px}
+  .yes{color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+  .no{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+  .part{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent);font-weight:600;font-size:11px}
+  .scroll{overflow-x:auto}
+
+  /* phone mockup */
+  .phone{width:100%;max-width:290px;margin:0 auto;background:#0b1020;border:2px solid #24304f;border-radius:22px;padding:12px 12px 14px;box-shadow:6px 6px 0 rgba(0,0,0,.22);font-family:var(--mono);color:#e6f1ff;font-size:10.5px;position:relative}
+  .phone .mk{position:absolute;top:-10px;right:14px;font-family:var(--pix);font-size:9px;background:var(--am);color:#0b1020;padding:1px 6px;border-radius:3px}
+  .ph-hud{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #24304f;padding:2px 2px 8px;font-size:10px;gap:6px}
+  .ph-hud b{color:var(--cy)}
+  .ph-axis{font-size:8.5px;color:#8da4c7;letter-spacing:.06em}
+  .matrix{position:relative;height:168px;margin:4px 2px 4px 2px;border-left:2px solid #3b5284;border-bottom:2px solid #3b5284;
+    background:linear-gradient(rgba(59,82,132,.35),rgba(59,82,132,.35)) center/1px 100% no-repeat,linear-gradient(rgba(59,82,132,.35),rgba(59,82,132,.35)) center/100% 1px no-repeat}
+  .q{position:absolute;font-size:8px;color:#516587;letter-spacing:.06em;font-family:var(--pix)}
+  .dot{position:absolute;transform:translate(-5px,-50%);display:flex;align-items:center;gap:4px;font-size:8.5px;white-space:nowrap;color:#e6f1ff}
+  .dot.l{flex-direction:row-reverse;transform:translate(calc(-100% + 5px),-50%)}
+  .dot i{width:10px;height:10px;display:block;background:var(--am);box-shadow:0 0 0 2px #0b1020;flex:none}
+  .dot.win i{background:var(--gr)}
+  .ph-card{border:2px solid var(--gr);border-radius:4px;padding:8px 10px;background:#0f1d18;margin-top:10px}
+  .ph-card .bd{color:var(--gr);font-weight:700;font-size:9.5px}
+  .ph-card .tt{font-weight:700;font-size:11.5px;margin:2px 0 4px}
+  .ph-card ol{padding-left:16px;color:#bcd0ee;font-size:10px;line-height:1.45}
+  .ph-card .kill{margin-top:5px;color:var(--rd);font-size:9.5px}
+  .ph-dock{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .ph-dock span{border:1px solid #3b5284;border-radius:3px;padding:3px 6px;font-size:9px;color:#8da4c7}
+  .ph-dock span.on{border-color:var(--cy);color:var(--cy)}
+
+  /* stat tiles with meter */
+  .tile{border:1px solid var(--line);border-radius:var(--rad);padding:14px 16px;background:var(--surface)}
+  .tile b{display:block;font-size:28px;font-weight:750;letter-spacing:-.02em;line-height:1.1}
+  .tile span{display:block;font-size:12.5px;color:var(--ink2);margin-top:4px}
+  .meter{height:6px;border-radius:999px;background:var(--soft);margin-top:10px;overflow:hidden}
+  .meter i{display:block;height:100%;border-radius:999px;background:var(--ink2)}
+
+  /* tape */
+  .tape{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .tape .sep{color:var(--s-faint)}
+  .tape-head{font-family:var(--pix);font-size:9px;color:var(--am);border-left:3px solid var(--am);padding:2px 0 2px 6px}
+  .undo{font-family:var(--pix);font-size:10px;color:#0b1020;background:var(--cy);border-radius:3px;padding:5px 10px;margin-left:auto}
+
+  /* recommendation */
+  .rec{border:2px solid var(--good);border-radius:calc(var(--rad) + 4px);padding:24px;background:color-mix(in srgb,var(--good) 6%,var(--surface))}
+  .rec h3{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-top:6px}
+  .rec p{margin-top:10px;max-width:70ch}
+  .track{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin-top:18px;align-items:center}
+  .track li{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:6px;padding:6px 10px;background:var(--surface);display:flex;align-items:center;gap:8px}
+  .track li span{font-family:var(--pix);font-size:10px;color:var(--ink2)}
+  .track li.hot{border:2px solid var(--good);font-weight:700}
+  .track .ar{border:0;background:none;padding:0;color:var(--ink2)}
+  .ask{margin-top:18px;font-weight:700}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<!-- ───────────────── HEADER ───────────────── -->
+<header>
+  <div class="kicker">ARCHITECTURE REVIEW · 16 NOV 2026 · BUILDS ON THE FIRST-PASS BUG REVIEW</div>
+  <h1 class="page-title">NEURAL//DECK</h1>
+  <p class="lede"><code>com.example.wtfff</code> — what it's missing, three problems, four deepening moves for the code, three product upgrades they unlock.</p>
+  <div class="stats">
+    <div class="stat"><b>3,269</b><span>lines of Java</span></div>
+    <div class="stat"><b>18</b><span>classes</span></div>
+    <div class="stat hot"><b>1</b><span>Activity holds every deck rule</span></div>
+    <div class="stat hot"><b>0</b><span>test files</span></div>
+    <div class="stat hot"><b>0</b><span>Gradle build files</span></div>
+  </div>
+  <div class="legend">
+    <span class="lg"><span class="sw" style="background:#121a33;border:1px solid #3b5284"></span>module</span>
+    <span class="lg"><span class="sw" style="background:#121a33;border:3px solid #39ff88"></span>deep module</span>
+    <span class="lg"><span class="sw" style="border-top:2px dashed #00b8c4;height:0;width:24px"></span>seam</span>
+    <span class="lg"><span class="sw" style="border-top:2px dashed #ff3864;height:0;width:24px"></span>leak / bug path</span>
+    <span class="lg"><span class="sw" style="border:1.5px dashed #8b93a5"></span>missing</span>
+  </div>
+</header>
+
+<!-- ───────────────── 01 WEIGHT ───────────────── -->
+<section id="weight">
+  <div class="sec-head"><span class="sec-num">01</span><h2>Where the weight sits</h2><p>Lines per class. One Activity carries a fifth of the code and every rule that changes a deck.</p></div>
+  <div class="card">
+    <div class="mass" role="table" aria-label="Lines of code per class">
+      <div class="f" title="root package">MainActivity <i>· activity</i></div><div class="bar hot" style="width:100%"></div><div class="n">659</div>
+      <div class="f">OpenAiCompatibleClient <i>· ai</i></div><div class="bar" style="width:79.2%"></div><div class="n">522</div>
+      <div class="f">BrainstormSession <i>· model</i></div><div class="bar" style="width:40.8%"></div><div class="n">269</div>
+      <div class="f">SkillsSheet <i>· ui</i></div><div class="bar" style="width:33.2%"></div><div class="n">219</div>
+      <div class="f">BrainstormRepository <i>· storage</i></div><div class="bar" style="width:32.6%"></div><div class="n">215</div>
+      <div class="f">IdeaCardAdapter <i>· ui</i></div><div class="bar" style="width:28.1%"></div><div class="n">185</div>
+      <div class="f">GraveyardSheet <i>· ui</i></div><div class="bar" style="width:24.3%"></div><div class="n">160</div>
+      <div class="f">ByokSettingsSheet <i>· ui</i></div><div class="bar" style="width:23.4%"></div><div class="n">154</div>
+      <div class="f">PromptLabSheet <i>· ui</i></div><div class="bar" style="width:22%"></div><div class="n">145</div>
+      <div class="f">CreativeSkill <i>· model</i></div><div class="bar" style="width:20%"></div><div class="n">132</div>
+      <div class="f">AiConfig <i>· storage</i></div><div class="bar" style="width:16.7%"></div><div class="n">110</div>
+      <div class="f">KeyVault <i>· storage</i></div><div class="bar" style="width:15.3%"></div><div class="n">101</div>
+      <div class="f">IdeaCard <i>· model</i></div><div class="bar" style="width:14%"></div><div class="n">92</div>
+      <div class="f">PixelBranchConnectorView <i>· ui</i></div><div class="bar" style="width:13.8%"></div><div class="n">91</div>
+      <div class="f">PixelGridBackgroundView <i>· ui</i></div><div class="bar" style="width:10.6%"></div><div class="n">70</div>
+      <div class="f">GraveyardEntry <i>· model</i></div><div class="bar" style="width:9.6%"></div><div class="n">63</div>
+      <div class="f">LocalPromptHeuristic <i>· ai</i></div><div class="bar" style="width:8.8%"></div><div class="n">58</div>
+      <div class="f">PromptOptimizationResult <i>· model</i></div><div class="bar" style="width:3.6%"></div><div class="n">24</div>
+      <div class="row-gap"></div>
+      <div class="f"><i>src/test/**</i></div><div class="bar ghost"></div><div class="n">0</div>
+      <div class="f"><i>build.gradle(.kts)</i></div><div class="bar ghost"></div><div class="n">—</div>
+      <div class="f"><i>ViewModel / state holder</i></div><div class="bar ghost"></div><div class="n">—</div>
+    </div>
+    <div class="callout" style="margin-top:16px"><b>MainActivity</b> calls <code>persistSessions()</code> 14 times and <code>refreshAllUi()</code> 20 times by hand, and names <code>activeSession</code> on 50 lines — including inside network callbacks.</div>
+  </div>
+</section>
+
+<!-- ───────────────── 02 MISSING ───────────────── -->
+<section id="missing">
+  <div class="sec-head"><span class="sec-num">02</span><h2>What it's missing</h2><p>Dashed = doesn't exist yet. <span class="tag new">NEW</span> marks gaps the first-pass review didn't raise.</p></div>
+  <div class="grid gap-3 sm:grid-cols-3">
+    <div class="gap"><span class="tag">INFRA</span> <span class="tag new">NEW</span><h4>A test suite</h4><p>Zero test files — and no seam a test could stand on. <a href="#p3">P3</a></p></div>
+    <div class="gap"><span class="tag">ARCH</span> <span class="tag new">NEW</span><h4>A home for deck rules</h4><p>Spark, branch, splice, banish and revive are Activity click handlers. <a href="#c1">C1</a></p></div>
+    <div class="gap"><span class="tag">ARCH</span> <span class="tag new">NEW</span><h4>A tree with one owner</h4><p>Tree shape is stored, re-derived and overwritten in three places. <a href="#c2">C2</a></p></div>
+    <div class="gap"><span class="tag">PRODUCT</span> <span class="tag new">NEW</span><h4>A converge phase</h4><p>Spark, branch and splice all add cards. Nothing ranks, merges or narrows them. <a href="#i1">I1</a></p></div>
+    <div class="gap"><span class="tag">PRODUCT</span> <span class="tag new">NEW</span><h4>Memory across decks</h4><p>Graveyard rules die with their deck; the same cliché returns next session. <a href="#i2">I2</a></p></div>
+    <div class="gap"><span class="tag">PRODUCT</span> <span class="tag new">NEW</span><h4>Undo</h4><p>Banish, purge and delete-deck are one tap and permanent. <a href="#i3">I3</a></p></div>
+    <div class="gap"><span class="tag">INFRA</span><h4>A Gradle build</h4><p>Only a CodeAssist <code>module.toml</code>; Android Studio and CI can't build it.</p></div>
+    <div class="gap"><span class="tag">PRODUCT</span><h4>Lineage in prompts</h4><p>A branch sees seed + parent; grandparents and siblings are never sent.</p></div>
+    <div class="gap"><span class="tag">PRODUCT</span><h4>Human-written cards</h4><p>You can't add or edit a card yourself — only the AI can.</p></div>
+  </div>
+</section>
+
+<!-- ───────────────── 03 PROBLEMS ───────────────── -->
+<section id="problems">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Three problems</h2><p>Each is traced to file and line, and each maps to a deepening move in section 04.</p></div>
+
+  <!-- P1 -->
+  <article class="prob" id="p1">
+    <div class="head">
+      <span class="num">P1</span>
+      <h3>Late AI replies land in whichever deck is open — and the loading bar goes dark early</h3>
+      <div class="badges"><span class="badge b-bad">Corrupts data</span><span class="badge b-spec">extends earlier finding</span></div>
+    </div>
+    <ul class="bullets bad">
+      <li>Every callback reads <code>activeSession</code> when the reply <em>arrives</em>, not when you tapped.</li>
+      <li>A branch reply for a card in Deck A, arriving while Deck B is open: <code>indexOf(parent)</code> is −1, so the children are appended to Deck B, where their parent doesn't exist. They render as <b>root cards</b> and get saved.</li>
+      <li>Nothing blocks a second tap. Requests queue on one thread; the first reply turns the loading bar off while the second is still running.</li>
+    </ul>
+    <div class="grid gap-3 mt-4">
+      <div class="schem">
+        <div class="cap"><span class="before">BUG PATH · BRANCH, THEN SWITCH DECK</span><span>MAINACTIVITY.JAVA:290-300</span></div>
+        <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as You
+  participant M as MainActivity
+  participant X as AI thread
+  participant A as Deck A
+  participant B as Deck B
+  U->>M: BRANCH on card P (in Deck A)
+  M->>X: branchFromCard(P)
+  Note over M: loading bar ON
+  U->>M: switch to Deck B
+  X-->>M: 3 children, parentId = P
+  M->>B: activeSession.cards.indexOf(P) = -1
+  M->>B: addAll(children) at the end
+  Note over B: P is not in Deck B, so the children render as root cards
+  M->>B: persistSessions() - saved for good
+  Note over A: P never gets its children
+        </pre>
+      </div>
+      <div class="schem svgbox">
+        <div class="cap"><span class="before">DOUBLE-TAP SPARK</span><span>ILLUSTRATIVE TIMING</span></div>
+        <svg viewBox="0 0 640 132" role="img" aria-label="Timeline: two spark requests queue on one thread; the loading bar turns off after the first reply while the second is still running">
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#8da4c7">
+            <text x="0" y="32">SPARK tap 1</text>
+            <text x="0" y="64">SPARK tap 2</text>
+            <text x="0" y="96">loading bar</text>
+          </g>
+          <text x="273" y="10" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8da4c7">reply 1 → setLoading(false)</text>
+          <line x1="273" y1="14" x2="273" y2="108" stroke="#8da4c7" stroke-dasharray="2 3" opacity=".6"/>
+          <rect x="120" y="20" width="153" height="16" rx="2" fill="#ff2e93"/>
+          <text x="126" y="31" font-family="JetBrains Mono, monospace" font-size="9" fill="#0b1020" font-weight="700">request 1</text>
+          <rect x="120.5" y="52.5" width="152" height="15" rx="2" fill="none" stroke="#ff2e93" stroke-dasharray="3 3"/>
+          <text x="126" y="63" font-family="JetBrains Mono, monospace" font-size="9" fill="#ff2e93">queued — 1 thread</text>
+          <rect x="273" y="52" width="230" height="16" rx="2" fill="#ff2e93"/>
+          <text x="279" y="63" font-family="JetBrains Mono, monospace" font-size="9" fill="#0b1020" font-weight="700">request 2</text>
+          <rect x="120" y="84" width="153" height="16" rx="2" fill="#00f0ff"/>
+          <text x="126" y="95" font-family="JetBrains Mono, monospace" font-size="9" fill="#0b1020" font-weight="700">ON</text>
+          <rect x="273.5" y="84.5" width="229" height="15" rx="2" fill="rgba(255,56,100,.14)" stroke="#ff3864" stroke-dasharray="3 3"/>
+          <text x="279" y="95" font-family="JetBrains Mono, monospace" font-size="9" fill="#ff3864">OFF — request 2 still running</text>
+          <line x1="503" y1="14" x2="503" y2="108" stroke="#e6f1ff" stroke-dasharray="2 3" opacity=".7"/>
+          <text x="503" y="10" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#e6f1ff">cards pop in, no spinner</text>
+          <line x1="120" y1="116" x2="630" y2="116" stroke="#3b5284"/>
+          <text x="630" y="128" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="9" fill="#516587">time →</text>
+        </svg>
+      </div>
+    </div>
+    <div class="refs"><b>WHERE</b>MainActivity.java:261-268 · 290-300 · 333-346 &nbsp;·&nbsp; OpenAiCompatibleClient.java:35 &nbsp;·&nbsp; <b>FIXED BY</b><a class="unlock add" href="#c1">C1 Deck module</a></div>
+  </article>
+
+  <!-- P2 -->
+  <article class="prob" id="p2">
+    <div class="head">
+      <span class="num">P2</span>
+      <h3>Drawing the tree rewrites the data</h3>
+      <div class="badges"><span class="badge b-bad">Wrong render</span><span class="badge b-new">new root cause</span></div>
+    </div>
+    <ul class="bullets bad">
+      <li><code>depth</code> is saved with every card, then overwritten by two copy-pasted tree walks — one for the ALL view, one for Markdown export.</li>
+      <li>STARRED and ROOTS skip the walk, so they draw whatever depth was last written. Rails point at parents that aren't on screen.</li>
+      <li>Every ★ or collapse tap rebuilds the tree with a linear parent lookup per card (≈ N²/2 compares), then each visible row re-scans its subtree to print <code>[-N]</code>.</li>
+    </ul>
+    <div class="grid gap-3 mt-4 sm:grid-cols-2">
+      <div class="schem">
+        <div class="cap"><span class="before">ONE FIELD · 3 WRITERS · 2 READERS</span></div>
+        <div class="grid gap-2" style="grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr)">
+          <div class="flow" style="gap:5px">
+            <div class="step">new IdeaCard(parent.depth+1)</div>
+            <div class="step">buildVisibleTree("ALL") overwrites</div>
+            <div class="step">buildFullOrderedTree() overwrites</div>
+          </div>
+          <div class="down" style="align-self:center">→</div>
+          <div class="flow" style="gap:5px;justify-content:center">
+            <div class="mod" style="border:2px solid var(--am)"><div class="t">card.depth</div><div class="s">saved to JSON</div></div>
+            <div class="down">↓ read by</div>
+            <div class="step">branch rails</div>
+            <div class="step">export indent</div>
+          </div>
+        </div>
+        <div class="step bad" style="margin-top:10px">STARRED / ROOTS run no writer → readers get a stale value</div>
+      </div>
+      <div class="schem svgbox">
+        <div class="cap"><span class="before">★ STARRED VIEW TODAY</span><span>CHILD_B NOT STARRED</span></div>
+        <svg viewBox="0 0 300 96" role="img" aria-label="Starred view: a grandchild card keeps depth 2, so its rails point up at a parent that is not shown">
+          <g fill="#121a33" stroke="#3b5284">
+            <rect x="4.5" y="4.5" width="291" height="23" rx="2"/>
+            <rect x="52.5" y="36.5" width="243" height="23" rx="2"/>
+            <rect x="28.5" y="68.5" width="267" height="23" rx="2"/>
+          </g>
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#e6f1ff">
+            <text x="12" y="20">ROOT_A ★</text>
+            <text x="60" y="52">GRAND_D ★</text>
+            <text x="36" y="84">CHILD_C ★</text>
+          </g>
+          <text x="288" y="52" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="9" fill="#ff3864">rails → no parent</text>
+          <rect x="11" y="36" width="2" height="24" fill="#3b5284"/>
+          <rect x="35" y="36" width="2" height="13" fill="#ff2e93"/>
+          <rect x="35" y="47" width="17" height="2" fill="#ff2e93"/>
+          <rect x="33" y="45" width="6" height="6" fill="#ff2e93"/>
+          <rect x="11" y="68" width="2" height="13" fill="#00f0ff"/>
+          <rect x="11" y="79" width="17" height="2" fill="#00f0ff"/>
+          <rect x="9" y="77" width="6" height="6" fill="#00f0ff"/>
+          <g fill="none" stroke="#ff3864" stroke-width="1.5"><circle cx="12" cy="33" r="4"/><circle cx="36" cy="33" r="4"/></g>
+        </svg>
+        <div class="svglegend"><span>GRAND_D keeps depth 2 from the last ALL render — its parent CHILD_B isn't in this view.</span></div>
+      </div>
+    </div>
+    <div class="refs"><b>WHERE</b>BrainstormSession.java:83-139 · 188-222 &nbsp;·&nbsp; IdeaCard.java:14 · 50 &nbsp;·&nbsp; IdeaCardAdapter.java:86 &nbsp;·&nbsp; PixelBranchConnectorView.java:38 &nbsp;·&nbsp; <b>FIXED BY</b><a class="unlock add" href="#c2">C2 IdeaTree</a></div>
+  </article>
+
+  <!-- P3 -->
+  <article class="prob" id="p3">
+    <div class="head">
+      <span class="num">P3</span>
+      <h3>No test can reach the logic</h3>
+      <div class="badges"><span class="badge b-bad">Blocks every fix</span><span class="badge b-new">new</span></div>
+    </div>
+    <ul class="bullets bad">
+      <li>Zero test files — and the code gives a test nowhere to stand: rules live in an Activity, prompts and parsing are <code>private</code>, HTTP is opened inline.</li>
+      <li>The AI client grabs the main Looper in a field initializer, so a plain JUnit test dies on <code>new OpenAiCompatibleClient(…)</code>.</li>
+      <li>Nearly every bug in the first-pass review needs an emulator to reproduce. Only the tree walk is plain Java today.</li>
+    </ul>
+    <div class="card scroll" style="margin-top:16px;padding:8px 10px">
+      <table class="tbl">
+        <thead><tr><th>LOGIC</th><th>LIVES IN</th><th>PLAIN JVM?</th><th>SWAP DEPS?</th><th>TESTABLE TODAY</th></tr></thead>
+        <tbody>
+          <tr><td>Deck rules (spark · branch · splice · banish)</td><td class="m">MainActivity click handlers</td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td></tr>
+          <tr><td>Prompt assembly ×4</td><td class="m">OpenAiCompatibleClient · private</td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td></tr>
+          <tr><td>Reply parsing</td><td class="m">OpenAiCompatibleClient · private, org.json</td><td><span class="no">✗</span></td><td>—</td><td><span class="no">✗</span></td></tr>
+          <tr><td>HTTP call</td><td class="m">HttpURLConnection inline</td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td></tr>
+          <tr><td>Provider settings</td><td class="m">AiConfig · SharedPreferences</td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="part">emulator</span></td></tr>
+          <tr><td>Session file</td><td class="m">BrainstormRepository · Context</td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="part">emulator</span></td></tr>
+          <tr><td>Key encryption</td><td class="m">KeyVault · AndroidKeyStore</td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="part">device</span></td></tr>
+          <tr><td>Tree walk</td><td class="m">BrainstormSession</td><td><span class="yes">✓</span></td><td>—</td><td><span class="yes">✓</span> <span class="muted" style="font-size:12px">no test written</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="refs"><b>WHERE</b>OpenAiCompatibleClient.java:35-36 · 284-365 · 395-504 &nbsp;·&nbsp; MainActivity.java:246-356 · 620-658 &nbsp;·&nbsp; <b>FIXED BY</b><a class="unlock add" href="#c1">C1</a><a class="unlock add" href="#c2">C2</a><a class="unlock add" href="#c3">C3</a></div>
+  </article>
+</section>
+
+<!-- ───────────────── 04 CANDIDATES ───────────────── -->
+<section id="candidates">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Deepening moves</h2><p>Architecture improvements. Each turns shallow, scattered code into a deep module: small interface, lots of behaviour behind it, one place to test.</p></div>
+
+  <!-- C1 -->
+  <article class="cand" id="c1">
+    <div class="head">
+      <span class="num">C1</span>
+      <h3>Lift the deck rules out of MainActivity into a Deck module</h3>
+      <div class="badges"><span class="badge b-strong">Strong</span><span class="badge b-dep">local-substitutable</span></div>
+    </div>
+    <div class="files"><span>MainActivity.java:246-480 · 620-658</span><span>BrainstormSession.java</span><span>BrainstormRepository.java</span><span>new: Deck, held by a ViewModel</span></div>
+    <div class="grid gap-3 mt-4 sm:grid-cols-2">
+      <div class="schem">
+        <div class="cap"><span class="before">BEFORE</span><span>ACTIVITY AS HUB</span></div>
+        <div class="hub">
+          <svg class="hub-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line x1="50" y1="50" x2="16" y2="14"/><line x1="50" y1="50" x2="84" y2="14"/>
+            <line x1="50" y1="50" x2="16" y2="50"/><line x1="50" y1="50" x2="84" y2="50" class="r"/>
+            <line x1="50" y1="50" x2="16" y2="86"/><line x1="50" y1="50" x2="50" y2="86"/>
+            <line x1="50" y1="50" x2="84" y2="86" class="r"/>
+          </svg>
+          <div class="mod"><div class="t">cards</div><div class="s">insert ×4 · remove subtree</div></div>
+          <div></div>
+          <div class="mod"><div class="t">graveyard</div><div class="s">add entry</div></div>
+          <div class="mod"><div class="t">repository</div><div class="s">save ×14, by hand</div></div>
+          <div class="mod bloat"><div class="t">MainActivity</div><div class="s">659 lines · rules + UI + I/O</div></div>
+          <div class="mod"><div class="t">AI client</div><div class="s leak">reply lands on open deck</div></div>
+          <div class="mod"><div class="t">adapter</div><div class="s">7 callbacks</div></div>
+          <div class="mod"><div class="t">4 sheets</div><div class="s">listeners</div></div>
+          <div class="mod"><div class="t">grave sheet</div><div class="s leak">edits graveyard directly</div></div>
+        </div>
+      </div>
+      <div class="schem">
+        <div class="cap"><span class="after">AFTER</span><span>ACTIVITY ONLY RENDERS</span></div>
+        <div class="mod dim"><div class="t">MainActivity</div><div class="s">sends intents · draws the snapshot</div></div>
+        <div class="down">↓ spark · branch · splice · banish · revive · switch &nbsp;&nbsp; ↑ DeckState</div>
+        <div class="mod deep">
+          <div class="t">Deck <span style="color:var(--s-dim);font-weight:400;text-transform:none">· held by a ViewModel</span></div>
+          <div class="flex flex-wrap gap-1 mt-2 faded">
+            <span class="chipx">target deck pinned at tap</span><span class="chipx">one request in flight</span>
+            <span class="chipx">insert / remove rules</span><span class="chipx">banish archives subtree</span>
+            <span class="chipx">save after each action</span><span class="chipx">undo log</span>
+          </div>
+        </div>
+        <div class="seam"><span>SEAM</span></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="mod"><div class="t">sessions store</div><div class="s">app file · temp dir in tests</div></div>
+          <div class="mod"><div class="t">idea engine</div><div class="s">HTTP · scripted in tests (C3)</div></div>
+        </div>
+      </div>
+    </div>
+    <dl class="psw">
+      <dt>PROBLEM</dt><dd>Where children go, what banish removes and when to save are written inside click callbacks that read <code>activeSession</code> whenever a reply lands.</dd>
+      <dt>SOLUTION</dt><dd>One Deck module owns the sessions, the active one, requests in flight and saving; the Activity sends what the user did and draws the snapshot it gets back.</dd>
+      <dt>WINS</dt><dd class="wins"><span class="win">locality: race fix lives once</span><span class="win">tests skip the emulator</span><span class="win">rotation keeps in-flight work</span><span class="win">undo log comes free</span><span class="win">Activity shrinks to drawing</span></dd>
+      <dt>UNLOCKS</dt><dd><a class="unlock fix" href="#p1">fixes P1</a><a class="unlock fix" href="#recheck">fixes banish subtree loss</a><a class="unlock add" href="#i2">I2 Taste</a><a class="unlock add" href="#i3">I3 Undo</a></dd>
+    </dl>
+    <div class="deletion"><b>Deletion test:</b> delete the Deck and its rules scatter back across a dozen Activity callbacks — it concentrates complexity, so it earns its place.</div>
+  </article>
+
+  <!-- C2 -->
+  <article class="cand" id="c2">
+    <div class="head">
+      <span class="num">C2</span>
+      <h3>Give the idea tree one owner: an IdeaTree module</h3>
+      <div class="badges"><span class="badge b-strong">Strong</span><span class="badge b-dep">in-process</span></div>
+    </div>
+    <div class="files"><span>BrainstormSession.java:44-139 · 188-222</span><span>IdeaCard.java:14</span><span>IdeaCardAdapter.java:86</span><span>PixelBranchConnectorView.java:37</span><span>MainActivity.java:292 · 337</span><span>OpenAiCompatibleClient.java:169</span></div>
+    <div class="grid gap-3 mt-4 sm:grid-cols-2">
+      <div class="schem svgbox">
+        <div class="cap"><span class="before">BEFORE</span><span>TREE KNOWLEDGE IN 6 FILES</span></div>
+        <div class="grid gap-1" style="grid-template-columns:auto minmax(0,1fr);font-size:10.5px;margin-bottom:12px">
+          <span style="color:var(--s-dim)">IdeaCard</span><span class="leak">depth saved, goes stale</span>
+          <span style="color:var(--s-dim)">Session</span><span class="leak">2 copy-pasted walks</span>
+          <span style="color:var(--s-dim)">Adapter</span><span class="leak">subtree re-count per row</span>
+          <span style="color:var(--s-dim)">Rails view</span><span class="leak">knows depth only, clamps at 4</span>
+          <span style="color:var(--s-dim)">Activity</span><span class="leak">"insert after parent" ×2</span>
+          <span style="color:var(--s-dim)">AI client</span><span class="leak">splice parent = 1st card</span>
+        </div>
+        <svg viewBox="0 0 300 192" role="img" aria-label="Current rail rendering: rails break between rows and one dangles past the last child">
+          <g fill="#121a33" stroke="#3b5284">
+            <rect x="4.5" y="4.5" width="291" height="23" rx="2"/><rect x="28.5" y="36.5" width="267" height="23" rx="2"/>
+            <rect x="52.5" y="68.5" width="243" height="23" rx="2"/><rect x="28.5" y="100.5" width="267" height="23" rx="2"/>
+            <rect x="52.5" y="132.5" width="243" height="23" rx="2"/><rect x="4.5" y="164.5" width="291" height="23" rx="2"/>
+          </g>
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#e6f1ff">
+            <text x="12" y="20">ROOT_A</text><text x="36" y="52">CHILD_B</text><text x="60" y="84">GRAND_D</text>
+            <text x="36" y="116">CHILD_C</text><text x="60" y="148">GRAND_F</text><text x="12" y="180">ROOT_E</text>
+          </g>
+          <rect x="11" y="36" width="2" height="13" fill="#00f0ff"/><rect x="11" y="47" width="17" height="2" fill="#00f0ff"/>
+          <rect x="11" y="68" width="2" height="24" fill="#3b5284"/>
+          <rect x="35" y="68" width="2" height="13" fill="#ff2e93"/><rect x="35" y="79" width="17" height="2" fill="#ff2e93"/>
+          <rect x="11" y="100" width="2" height="13" fill="#00f0ff"/><rect x="11" y="111" width="17" height="2" fill="#00f0ff"/>
+          <rect x="11" y="132" width="2" height="24" fill="#ff3864"/>
+          <rect x="35" y="132" width="2" height="13" fill="#ff2e93"/><rect x="35" y="143" width="17" height="2" fill="#ff2e93"/>
+          <g fill="#00f0ff"><rect x="9" y="45" width="6" height="6"/><rect x="9" y="109" width="6" height="6"/></g>
+          <g fill="#ff2e93"><rect x="33" y="77" width="6" height="6"/><rect x="33" y="141" width="6" height="6"/></g>
+          <g fill="none" stroke="#ff3864" stroke-width="1.5">
+            <circle cx="12" cy="32" r="4"/><circle cx="12" cy="58" r="4"/><circle cx="36" cy="64" r="4"/>
+            <circle cx="12" cy="96" r="4"/><circle cx="36" cy="128" r="4"/>
+          </g>
+        </svg>
+        <div class="svglegend"><span><span class="leak">○</span> breaks between rows</span><span><span class="leak">▮</span> rail dangles past the last child</span></div>
+      </div>
+      <div class="schem svgbox">
+        <div class="cap"><span class="after">AFTER</span><span>ONE PASS, ONE OWNER</span></div>
+        <div class="mod deep" style="margin-bottom:12px">
+          <div class="t">IdeaTree</div>
+          <div class="iface">cards in → rows out · lineage(card) · subtree(card)</div>
+          <div class="flex flex-wrap gap-1 mt-2 faded">
+            <span class="chipx">depth · last-sibling · rail mask</span><span class="chipx">subtree size</span><span class="chipx">multi-parent splice links</span><span class="chipx">O(N), no stored depth</span>
+          </div>
+        </div>
+        <svg viewBox="0 0 300 192" role="img" aria-label="Fixed rail rendering: rails run continuously and stop at the last child">
+          <g fill="#121a33" stroke="#3b5284">
+            <rect x="4.5" y="4.5" width="291" height="23" rx="2"/><rect x="28.5" y="36.5" width="267" height="23" rx="2"/>
+            <rect x="52.5" y="68.5" width="243" height="23" rx="2"/><rect x="28.5" y="100.5" width="267" height="23" rx="2"/>
+            <rect x="52.5" y="132.5" width="243" height="23" rx="2"/><rect x="4.5" y="164.5" width="291" height="23" rx="2"/>
+          </g>
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#e6f1ff">
+            <text x="12" y="20">ROOT_A</text><text x="36" y="52">CHILD_B</text><text x="60" y="84">GRAND_D</text>
+            <text x="36" y="116">CHILD_C</text><text x="60" y="148">GRAND_F</text><text x="12" y="180">ROOT_E</text>
+          </g>
+          <rect x="11" y="28" width="2" height="85" fill="#00f0ff"/>
+          <rect x="11" y="47" width="17" height="2" fill="#00f0ff"/><rect x="11" y="111" width="17" height="2" fill="#00f0ff"/>
+          <rect x="35" y="60" width="2" height="21" fill="#ff2e93"/><rect x="35" y="79" width="17" height="2" fill="#ff2e93"/>
+          <rect x="35" y="124" width="2" height="21" fill="#ff2e93"/><rect x="35" y="143" width="17" height="2" fill="#ff2e93"/>
+          <g fill="#00f0ff"><rect x="9" y="45" width="6" height="6"/><rect x="9" y="109" width="6" height="6"/></g>
+          <g fill="#ff2e93"><rect x="33" y="77" width="6" height="6"/><rect x="33" y="141" width="6" height="6"/></g>
+        </svg>
+        <div class="svglegend"><span>Rails cross the row gaps and stop exactly at the last sibling.</span></div>
+      </div>
+    </div>
+    <dl class="psw">
+      <dt>PROBLEM</dt><dd>Tree shape is stored twice (<code>parentId</code> and a cached <code>depth</code>), walked by two copies that overwrite it, re-counted per row, and drawn by a view that only knows depth.</dd>
+      <dt>SOLUTION</dt><dd>One pure IdeaTree module derives every visible row — depth, last-sibling flags, rail mask, subtree size — in a single pass, and answers lineage and subtree questions for everyone else.</dd>
+      <dt>WINS</dt><dd class="wins"><span class="win">rails finally connect</span><span class="win">★ view stops lying</span><span class="win">revive restores the whole branch</span><span class="win">lineage feeds branch prompts</span><span class="win">splice keeps every parent</span><span class="win">tests: plain Java fixtures</span></dd>
+      <dt>UNLOCKS</dt><dd><a class="unlock fix" href="#p2">fixes P2</a><a class="unlock add" href="#i1">I1 Converge</a><a class="unlock add" href="#missing">lineage in prompts</a></dd>
+    </dl>
+    <div class="deletion"><b>Deletion test:</b> delete IdeaTree and six files go back to each knowing a piece of the tree — it concentrates.</div>
+  </article>
+
+  <!-- C3 -->
+  <article class="cand" id="c3">
+    <div class="head">
+      <span class="num">C3</span>
+      <h3>Turn the AI client into a deep Idea Engine with a real seam</h3>
+      <div class="badges"><span class="badge b-strong">Strong</span><span class="badge b-dep">ports &amp; adapters</span></div>
+    </div>
+    <div class="files"><span>OpenAiCompatibleClient.java</span><span>LocalPromptHeuristic.java</span><span>PromptLabSheet.java:77-101</span><span>AiConfig.java</span></div>
+    <div class="grid gap-3 mt-4 sm:grid-cols-2">
+      <div class="schem">
+        <div class="cap"><span class="before">BEFORE</span><span>ONE CLASS · FIVE JOBS</span></div>
+        <div class="mod bloat" style="padding:9px">
+          <div class="t">OpenAiCompatibleClient · 522 lines</div>
+          <div class="band" style="--c:var(--am)"><b>THREADING</b>1 thread · main-looper Handler · no cancel</div>
+          <div class="band" style="--c:var(--vi)"><b>CONFIG</b>reads live AiConfig mid-request</div>
+          <div class="band" style="--c:var(--mg)"><b>PROMPTS ×4</b>spark · branch · splice · optimize, hand-built</div>
+          <div class="band" style="--c:var(--cy)"><b>TRANSPORT</b>HttpURLConnection inline</div>
+          <div class="band" style="--c:var(--rd)"><b>PARSING</b>first { → last } · prose = error</div>
+        </div>
+        <div class="grid gap-2 mt-3" style="grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center">
+          <div class="mod"><div class="t">PromptLabSheet</div><div class="s leak">picks the fallback itself</div></div>
+          <div class="leak" style="font-size:14px">⇢</div>
+          <div class="mod ghost"><div class="t">LocalPromptHeuristic</div><div class="s">offline twin, unnamed</div></div>
+        </div>
+        <div class="down" style="text-align:left;margin-top:6px">Framework names (CO-STAR …) are string literals on 16 lines across 3 files.</div>
+      </div>
+      <div class="schem">
+        <div class="cap"><span class="after">AFTER</span><span>DEEP MODULE · REAL SEAM</span></div>
+        <div class="mod deep">
+          <div class="t">Idea Engine</div>
+          <div class="iface">request in → cards or error out</div>
+          <div class="flex flex-wrap gap-1 mt-2 faded">
+            <span class="chipx">prompt composer · pure</span><span class="chipx">reply parser · pure</span>
+            <span class="chipx">lineage + siblings in prompt</span><span class="chipx">frameworks as data</span>
+            <span class="chipx">one request · cancel</span><span class="chipx">fallback decided once</span>
+          </div>
+        </div>
+        <div class="seam"><span>SEAM · WHERE THE TEXT COMES FROM</span></div>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="mod"><div class="t">HTTP</div><div class="s">provider · prod</div></div>
+          <div class="mod"><div class="t">Scripted</div><div class="s">canned replies · tests</div></div>
+          <div class="mod"><div class="t">Offline</div><div class="s">local heuristic · exists today</div></div>
+        </div>
+        <div class="down" style="text-align:left;margin-top:8px">Two adapters justify the seam: HTTP in prod, scripted replies in tests. The offline one is already written.</div>
+      </div>
+    </div>
+    <dl class="psw">
+      <dt>PROBLEM</dt><dd>One class does threading, config reads, four hand-built prompts, raw HTTP and first-<code>{</code>-to-last-<code>}</code> parsing, while PromptLabSheet decides on its own when to fall back to the offline heuristic.</dd>
+      <dt>SOLUTION</dt><dd>The engine takes a request (spark, branch, splice, optimize + its context) and returns cards or an error; behind its seam sit a pure prompt composer, a pure reply parser and a swappable source of text.</dd>
+      <dt>WINS</dt><dd class="wins"><span class="win">golden-file prompt tests</span><span class="win">parser tests on real replies</span><span class="win">&lt;think&gt; replies parse</span><span class="win">cancel + streaming added once</span><span class="win">leverage: 4 callers, 1 engine</span></dd>
+      <dt>UNLOCKS</dt><dd><a class="unlock fix" href="#p3">fixes P3 (AI half)</a><a class="unlock fix" href="#recheck">fixes parser findings</a><a class="unlock add" href="#i1">I1 Converge</a><a class="unlock add" href="#i2">I2 Distill</a></dd>
+    </dl>
+    <div class="deletion"><b>Deletion test:</b> delete the engine and every caller rebuilds prompts, threads and fallbacks — it concentrates.</div>
+  </article>
+
+  <!-- C4 -->
+  <article class="cand" id="c4">
+    <div class="head">
+      <span class="num">C4</span>
+      <h3>Make provider settings a value, not a live cursor</h3>
+      <div class="badges"><span class="badge b-worth">Worth exploring</span><span class="badge b-dep">local-substitutable</span></div>
+    </div>
+    <div class="files"><span>AiConfig.java:23-47 · 77-85</span><span>ByokSettingsSheet.java:50-63 · 127-145</span><span>KeyVault.java:45-49</span><span>OpenAiCompatibleClient.java:294</span><span>AndroidManifest.xml</span></div>
+    <div class="grid gap-3 mt-4 sm:grid-cols-2">
+      <div class="schem">
+        <div class="cap"><span class="before">BEFORE</span><span>GETTERS FOLLOW A GLOBAL POINTER</span></div>
+        <div class="flow">
+          <div class="step">tap GROQ chip, just to look</div>
+          <div class="down">↓ refreshProviderFields()</div>
+          <div class="step bad">provider_id = groq · written to prefs now</div>
+          <div class="down">↓</div>
+          <div class="step">swipe the sheet away, no SAVE</div>
+          <div class="down">↓</div>
+          <div class="step bad">HUD still says OPENROUTER · next SPARK runs on GROQ, or asks for a GROQ key</div>
+        </div>
+        <div class="grid gap-2 mt-3" style="grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center">
+          <div class="step">AiConfig: keyless only on CUSTOM + 3 hosts</div>
+          <div class="leak" style="font-weight:700">≠</div>
+          <div class="step">client: keyless on any provider + 3 hosts</div>
+        </div>
+      </div>
+      <div class="schem">
+        <div class="cap"><span class="after">AFTER</span><span>READ BY ID · DRAFT · COMMIT</span></div>
+        <div class="flow">
+          <div class="step">tap GROQ chip</div>
+          <div class="down">↓ load GROQ profile by id</div>
+          <div class="step">draft profile · memory only</div>
+          <div class="down">↓ SAVE</div>
+          <div class="step good">commit profile + key together · HUD refreshes</div>
+          <div class="down">swipe away instead →</div>
+          <div class="step ghost">nothing changed</div>
+        </div>
+        <div class="step good" style="margin-top:12px">one endpoint rule: loopback · emulator · LAN · tailnet + cleartext flag shown in the sheet</div>
+      </div>
+    </div>
+    <dl class="psw">
+      <dt>PROBLEM</dt><dd>AiConfig's getters read a global "current provider", so the sheet must move that pointer to preview a provider — and it stays moved. The "is this a local endpoint?" rule exists twice and the copies disagree.</dd>
+      <dt>SOLUTION</dt><dd>Read and save a whole profile per provider; the sheet edits a draft that only SAVE commits; one place decides local-network rules and reports whether the key is truly encrypted.</dd>
+      <dt>WINS</dt><dd class="wins"><span class="win">browsing changes nothing</span><span class="win">one local-endpoint rule</span><span class="win">honest vault status</span><span class="win">fake profile in tests</span></dd>
+      <dt>UNLOCKS</dt><dd><a class="unlock fix" href="#recheck">fixes BYOK save bug</a><a class="unlock fix" href="#recheck">LAN / Ollama setups</a></dd>
+    </dl>
+  </article>
+</section>
+
+<!-- ───────────────── 05 PRODUCT ───────────────── -->
+<section id="product">
+  <div class="sec-head"><span class="sec-num">05</span><h2>Product upgrades the deepening unlocks</h2><p>New features, not fixes. Each one is cheap only after the module it depends on exists.</p></div>
+
+  <!-- I1 -->
+  <article class="cand" id="i1">
+    <div class="head">
+      <span class="num">I1</span>
+      <h3>CONVERGE — the missing half of a brainstorm</h3>
+      <div class="badges"><span class="badge b-new">new feature</span><span class="badge b-dep">needs C2 + C3</span></div>
+    </div>
+    <div class="schem svgbox mt-4">
+      <div class="cap"><span>DOUBLE DIAMOND</span><span>THE APP STOPS HALFWAY</span></div>
+      <svg viewBox="0 0 640 178" role="img" aria-label="Double diamond: the app covers diverge; the converge half is missing">
+        <text x="170" y="14" text-anchor="middle" font-family="Silkscreen, monospace" font-size="10" fill="#8da4c7">WHAT IT DOES</text>
+        <text x="470" y="14" text-anchor="middle" font-family="Silkscreen, monospace" font-size="10" fill="#ffb800">WHAT'S MISSING</text>
+        <polygon points="20,96 170,26 320,96 170,166" fill="rgba(0,240,255,.08)" stroke="#00f0ff" stroke-width="2"/>
+        <polygon points="320,96 470,26 620,96 470,166" fill="none" stroke="#516587" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="170" y="74" text-anchor="middle" font-family="Silkscreen, monospace" font-size="14" fill="#00f0ff">DIVERGE</text>
+        <g font-family="JetBrains Mono, monospace" font-size="10" fill="#e6f1ff" text-anchor="middle">
+          <text x="170" y="96">SPARK · BRANCH ×8</text><text x="170" y="111">SPLICE · PROMPT LAB ×4</text>
+        </g>
+        <text x="170" y="134" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8da4c7">every action adds cards</text>
+        <text x="470" y="74" text-anchor="middle" font-family="Silkscreen, monospace" font-size="14" fill="#8da4c7">CONVERGE</text>
+        <g font-family="JetBrains Mono, monospace" font-size="10" fill="#8da4c7" text-anchor="middle">
+          <text x="470" y="96">SCORE · CLUSTER</text><text x="470" y="111">COMMIT</text>
+        </g>
+        <text x="470" y="134" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#ffb800">nothing here today</text>
+      </svg>
+    </div>
+    <div class="grid gap-4 mt-4 sm:grid-cols-2" style="align-items:center">
+      <ul class="bullets" style="margin-top:0">
+        <li>Spark, branch and splice all <b>add</b> cards — even PRE_MORTEM and 48H_MVP return three more. Nothing ranks, de-duplicates or narrows.</li>
+        <li><b>SCORE</b> ★ cards on impact, effort and novelty, with the graveyard as "must not" criteria. Plot them on a 2×2.</li>
+        <li><b>CLUSTER</b> near-duplicates — branching twice on one card often repeats itself.</li>
+        <li><b>COMMIT</b> the winner into a SHIP_FIRST card: three first moves and a kill condition.</li>
+        <li>It's a new request kind on the Idea Engine (C3) that reads ★ cards + lineage from IdeaTree (C2). No new screens beyond one sheet.</li>
+      </ul>
+      <div class="phone" aria-label="Mockup of a converge sheet">
+        <span class="mk">MOCKUP</span>
+        <div class="ph-hud"><span>CONVERGE // <b>4 ★ CARDS</b></span><span style="color:#8da4c7">[SCORE]</span></div>
+        <div class="ph-axis" style="margin-top:8px">IMPACT ↑</div>
+        <div class="matrix">
+          <span class="q" style="left:5px;top:4px">QUICK WINS</span>
+          <span class="q" style="right:5px;top:4px">BIG BETS</span>
+          <span class="q" style="left:5px;bottom:4px">FILLER</span>
+          <span class="q" style="right:5px;bottom:4px">MONEY PITS</span>
+          <span class="dot win" style="left:16%;top:28%"><i></i>ZERO-UI</span>
+          <span class="dot" style="left:38%;top:42%"><i></i>SNAPSHOT</span>
+          <span class="dot l" style="left:84%;top:26%"><i></i>BIO-RHYTHM</span>
+          <span class="dot l" style="left:80%;top:70%"><i></i>GHOST CO-WORK</span>
+        </div>
+        <div class="ph-axis" style="text-align:right">EFFORT →</div>
+        <div class="ph-card">
+          <div class="bd">[SHIP_FIRST]</div>
+          <div class="tt">Zero-UI Lockscreen Cartridge</div>
+          <ol><li>Face-down flip arms focus</li><li>Buffer notifications into a digest</li><li>Hallway test with 5 people</li></ol>
+          <div class="kill">KILL_IF: fewer than 3 of 5 keep it on by day 2</div>
+        </div>
+        <div class="ph-dock"><span class="on">SCORE ✓</span><span>CLUSTER</span><span>COMMIT</span><span>EXPORT</span></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- I2 -->
+  <article class="cand" id="i2">
+    <div class="head">
+      <span class="num">I2</span>
+      <h3>TASTE PROFILE — banished ideas stay banished, in every deck</h3>
+      <div class="badges"><span class="badge b-new">new feature</span><span class="badge b-dep">needs C1 + C3</span></div>
+    </div>
+    <div class="grid gap-3 mt-4 sm:grid-cols-2">
+      <div class="schem">
+        <div class="cap"><span class="before">TODAY</span><span>GRAVEYARD IS PER DECK</span></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="mod"><div class="t">Deck A</div><div class="s">● no punitive streaks<br>● …2 more rules</div></div>
+          <div class="mod"><div class="t">Deck B · new</div><div class="s">graveyard empty</div></div>
+        </div>
+        <div class="down">↓ spark in Deck B</div>
+        <div class="step bad">nothing stops "Daily Flame Streak Leaderboard" coming back</div>
+        <div class="down" style="text-align:left;margin-top:6px">And every active rule is pasted into every request, verbatim, forever.</div>
+      </div>
+      <div class="schem">
+        <div class="cap"><span class="after">WITH A PROFILE</span><span>GLOBAL + LOCAL RULES</span></div>
+        <div class="mod deep"><div class="t">Taste profile · every deck</div><div class="s">● no punitive streaks / XP leagues<br>● no guilt-trip notifications · ≤ 8 distilled rules</div></div>
+        <div class="down">↓ feeds &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↓ feeds</div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="mod"><div class="t">Deck A</div><div class="s">+ its own rules</div></div>
+          <div class="mod"><div class="t">Deck B</div><div class="s">+ its own rules</div></div>
+        </div>
+        <div class="flex flex-wrap gap-1 mt-3"><span class="chipx" style="color:var(--cy);border-color:var(--cy)">PROMOTE rule → profile</span><span class="chipx" style="color:var(--cy);border-color:var(--cy)">DISTILL 40 → 8</span><span class="chipx">MUTE / REVIVE as today</span></div>
+      </div>
+    </div>
+    <div class="grid gap-3 mt-3 sm:grid-cols-3">
+      <div class="tile"><b>≈190</b><span>characters per auto-written rule, resent with every spark, branch, splice and prompt rewrite</span></div>
+      <div class="tile"><b>≈7,600</b><span>characters per call with 40 active rules (~1.9k tokens)</span><div class="meter"><i style="width:100%"></i></div></div>
+      <div class="tile"><b>≤1,000</b><span>characters after DISTILL merges them into ≤ 8 rules you approve</span><div class="meter"><i style="width:13%"></i></div></div>
+    </div>
+    <p class="refs">Rule length from <span class="code">GraveyardEntry.java:33</span> (title + tag + ≤110-char summary) and the line prefix in <span class="code">OpenAiCompatibleClient.java:278</span>.</p>
+  </article>
+
+  <!-- I3 -->
+  <article class="cand" id="i3">
+    <div class="head">
+      <span class="num">I3</span>
+      <h3>UNDO TAPE — every deck action can be rewound</h3>
+      <div class="badges"><span class="badge b-new">new feature</span><span class="badge b-dep">needs C1</span></div>
+    </div>
+    <div class="schem mt-4">
+      <div class="cap"><span>LAST 20 DECK ACTIONS</span><span>EACH STORES ITS INVERSE</span></div>
+      <div class="tape">
+        <span class="chipx">SPARK ×4</span><span class="sep">›</span>
+        <span class="chipx">BRANCH · SCAMPER</span><span class="sep">›</span>
+        <span class="chipx">★ ZERO-UI</span><span class="sep">›</span>
+        <span class="chipx" style="border-color:var(--rd);color:#ffd6e2;background:#2a0f1c">BANISH · FLAME STREAK +2 children</span><span class="sep">›</span>
+        <span class="chipx">SPLICE ×2</span>
+        <span class="tape-head">HEAD</span>
+        <span class="undo">⟲ UNDO</span>
+      </div>
+    </div>
+    <ul class="bullets">
+      <li>Once every change goes through the Deck module (C1) as a named action, keeping its inverse is a few lines per action.</li>
+      <li>Banish would archive the whole subtree, so undo — or REVIVE — brings back all three cards with their links, not one flattened root.</li>
+      <li>Covers the one-tap, no-confirm actions today: delete deck, purge rule, banish.</li>
+    </ul>
+  </article>
+</section>
+
+<!-- ───────────────── 06 RECHECK ───────────────── -->
+<section id="recheck">
+  <div class="sec-head"><span class="sec-num">06</span><h2>First-pass findings, re-checked — plus four small new ones</h2><p>Every row verified against the source.</p></div>
+  <div class="card scroll" style="padding:8px 10px">
+    <table class="tbl">
+      <thead><tr><th>FINDING</th><th>STATUS</th><th>WHERE</th></tr></thead>
+      <tbody>
+        <tr><td>A prose reply throws before reaching the "freeform" fallback card</td><td><span class="badge b-spec">confirmed</span></td><td class="m">OpenAiCompatibleClient.java:407 · 432-443</td></tr>
+        <tr><td>A <code>{</code> inside <code>&lt;think&gt;…&lt;/think&gt;</code> breaks the first-{-to-last-} slice</td><td><span class="badge b-spec">confirmed</span></td><td class="m">OpenAiCompatibleClient.java:486-501</td></tr>
+        <tr><td>Tapping a provider chip saves it without SAVE</td><td><span class="badge b-spec">confirmed</span></td><td class="m">ByokSettingsSheet.java:58</td></tr>
+        <tr><td>Banish removes the whole subtree but archives only the root; revive flattens it</td><td><span class="badge b-spec">confirmed</span></td><td class="m">MainActivity.java:641-648 · 428-433</td></tr>
+        <tr><td>A corrupt sessions file is silently replaced by the starter deck</td><td><span class="badge b-spec">confirmed</span></td><td class="m">BrainstormRepository.java:47-55</td></tr>
+        <tr><td>Keystore failure falls back to plain Base64, with <code>allowBackup="true"</code></td><td><span class="badge b-spec">confirmed</span></td><td class="m">KeyVault.java:45-49 · AndroidManifest.xml:8</td></tr>
+        <tr><td>Offline Prompt Lab claims graveyard rules it never adds to the prompt</td><td><span class="badge b-spec">confirmed</span></td><td class="m">LocalPromptHeuristic.java:46-54</td></tr>
+        <tr><td>Cleartext <code>http://</code> to localhost is blocked (targetSdk 36, no network config)</td><td><span class="badge b-spec">confirmed</span></td><td class="m">module.toml:53 · AndroidManifest.xml</td></tr>
+        <tr><td>Replies bleed into the deck you switched to</td><td><span class="badge b-bad">worse — see P1</span></td><td class="m">MainActivity.java:292-296</td></tr>
+        <tr><td>SPLICE's "+0.1 heat" becomes a cut above 1.2: the slider goes to 1.5, splice caps at 1.2</td><td><span class="badge b-new">new</span></td><td class="m">OpenAiCompatibleClient.java:164 · bottom_sheet_byok.xml:257</td></tr>
+        <tr><td>The CLARITY % is a constant offline (87) and when parsing fails (88)</td><td><span class="badge b-new">new</span></td><td class="m">LocalPromptHeuristic.java:56 · OpenAiCompatibleClient.java:470</td></tr>
+        <tr><td>Seed text you typed but didn't spark is dropped when you switch decks</td><td><span class="badge b-new">new</span></td><td class="m">MainActivity.java:464</td></tr>
+        <tr><td>The two "local endpoint" rules disagree: a keyless local URL on a preset provider passes PING but SPARK demands a key</td><td><span class="badge b-new">new</span></td><td class="m">AiConfig.java:81 · OpenAiCompatibleClient.java:294</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ───────────────── 07 TOP RECOMMENDATION ───────────────── -->
+<section id="top-recommendation">
+  <div class="sec-head"><span class="sec-num">07</span><h2>Top recommendation</h2></div>
+  <div class="rec">
+    <div class="kicker">TACKLE FIRST</div>
+    <h3><a href="#c1">C1 — Lift the deck rules out of MainActivity into a Deck module</a></h3>
+    <p>It's where the confirmed data corruption lives — replies landing in the wrong deck, banish losing branches — and it's the seam every other move plugs into: IdeaTree sits inside it, the Idea Engine sits behind it, Undo and Taste Profile hang off it.</p>
+    <p class="muted" style="font-size:14px">Step 0 is not optional: add a Gradle build with a JVM test source set. None of the deepening pays off until a test can run.</p>
+    <ol class="track">
+      <li><span>0</span>Gradle + JVM tests</li><li class="ar">→</li>
+      <li class="hot"><span>1</span>C1 Deck</li><li class="ar">→</li>
+      <li><span>2</span>C2 IdeaTree</li><li class="ar">→</li>
+      <li><span>3</span>C3 Idea Engine</li><li class="ar">→</li>
+      <li><span>4</span>Converge · Taste · Undo</li>
+    </ol>
+    <p class="muted" style="font-size:13px;margin-top:10px">C4 can ride along at any point — it only touches the BYOK sheet and AiConfig.</p>
+    <p class="ask">Which of these would you like to explore?</p>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

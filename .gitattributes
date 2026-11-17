@@ -1,0 +1,15 @@
+# Normalise line endings in the repository; keep each script runnable on its own platform.
+* text=auto
+
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files: never touch line endings or try to diff them as text.
+*.jar binary
+*.png binary
+*.webp binary
+*.apk binary
+*.aab binary
